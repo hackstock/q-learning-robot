@@ -4,7 +4,8 @@ from simulation.gridworld import GridWorld
 if __name__ == "__main__":
     grid = GridWorld(size=(10,10))
     grid.walls = [(1,1),(1,3)]
-    print(grid.walls)
+    state = grid.reset()
+    print(state)
     while True:
         grid.render()
         print()
@@ -13,4 +14,6 @@ if __name__ == "__main__":
         if ans == 'q':
             break
         else:
-            grid.move(ans)
+            next_state = grid.move(ans)
+            print(next_state)
+        

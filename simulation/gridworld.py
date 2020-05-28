@@ -24,13 +24,32 @@ class Cell(object):
     def col(self, value):
         self._col = value
 
+    def __repr__(self):
+        return f"({self.row},{self.col})"
+
 class GridWorld(object):
-    def __init__(self, size=(5,5), start_state=(0,0)):
+    def __init__(self, size=(5,5), start_pos=(0,0)):
         self.rows = size[0]
         self.cols = size[1]
-        self.position = Cell(start_state[0], start_state[1])
+        self.start_pos = start_pos
+        self.car_pos = Cell(start_pos[0], start_pos[1])
+        self.goal_pos = Cell(self.rows - 1, self.cols - 1)
         self._walls = []
-        self.world = self._update_world()
+        self.world = None
+        self.max_steps = self.rows * self.cols
+        self.steps_taken = 0
+        self.done = False
+        self.rewards = {
+            'into_fence': -5,
+            'into_wall': -5,
+            'at_goal': 100,
+            'good_move': -1
+        }
+
+    def reset(self):
+        self.steps_taken = 0
+        self.done = False 
+        return self.start_pos
 
     @property
     def walls(self):
@@ -45,16 +64,55 @@ class GridWorld(object):
         wall_rows = [cell.row for cell in self._walls]
         wall_cols = [cell.col for cell in self._walls]
         world[wall_rows, wall_cols] = '#'
-        world[self.position.row][self.position.col] = 'C'
+        world[self.car_pos.row][self.car_pos.col] = 'C'
+        world[self.goal_pos.row][self.goal_pos.col] = 'G'
 
         return world
 
-    def move(self, direction):
-        if direction == 'r':
-            self.position.col += 1
-        self.world = self._update_world()
+    def _move_right(self):
+        next_state = Cell(self.car_pos.row, self.car_pos.col + 1)
+        if next_state.col == self.cols or next_state in self._walls:
+            next_state = self.car_pos
+        
+        return next_state
 
+    def _move_left(self):
+        next_state = Cell(self.car_pos.row, self.car_pos.col - 1)
+        if next_state.col < 0 or next_state in self._walls:
+            next_state = self.car_pos
+           
+        return next_state
+
+    def _move_down(self):
+        next_state = Cell(self.car_pos.row + 1, self.car_pos.col)
+        if next_state.row == self.rows or next_state in self._walls:
+            next_state = self.car_pos
+        
+        return next_state
+
+    def _move_up(self):
+        next_state = Cell(self.car_pos.row - 1, self.car_pos.col)
+        if next_state.row < 0 or next_state in self._walls:
+            next_state = self.car_pos
+        
+        return next_state
+         
+
+    def move(self, direction):
+        next_state = None
+        if direction == 'r':
+            next_state = self._move_right()
+        elif direction == 'l':
+            next_state = self._move_left()
+        elif direction == 'd':
+            next_state = self._move_down()
+        elif direction == 'u':
+            next_state = self._move_up()
+
+        self.car_pos = next_state
+        return next_state
 
     def render(self):
+        self.world = self._update_world()
         print(tabulate(self.world, tablefmt="fancy_grid"))
 
