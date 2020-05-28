@@ -5,7 +5,6 @@ if __name__ == "__main__":
     grid = GridWorld(size=(10,10))
     grid.walls = [(1,1),(1,3)]
     state = grid.reset()
-    print(state)
     while True:
         grid.render()
         print()
@@ -14,6 +13,6 @@ if __name__ == "__main__":
         if ans == 'q':
             break
         else:
-            next_state = grid.move(ans)
-            print(next_state)
+            next_state, reward, done = grid.move(ans)
+            print(next_state, reward, done)
         
